@@ -23,7 +23,8 @@ struct SetupConfiguration: Equatable {
 enum SetupLink {
     /// URL S3 pubblico su cui è ospitato Support/cloudformation.yaml.
     /// CloudFormation accetta solo modelli ospitati su S3.
-    static let templateURL: String? = nil
+    static let templateURL: String? =
+        "https://checcoux-prod-1.s3.eu-central-1.amazonaws.com/misc/cloudformation.yaml"
 
     static let signUp = URL(string: "https://portal.aws.amazon.com/billing/signup")!
 
