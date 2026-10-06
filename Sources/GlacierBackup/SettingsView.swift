@@ -16,6 +16,17 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
+            Section {
+                Button("Configurazione guidata…") {
+                    state.isShowingSetup = true
+                    NSApp.keyWindow?.close()
+                }
+                .disabled(state.isRunning)
+            } footer: {
+                Text("Crea bucket e credenziali sul tuo account AWS e collega l'app in automatico.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
             Section("Credenziali AWS") {
                 TextField("Access Key ID", text: $accessKeyID)
                     .autocorrectionDisabled()

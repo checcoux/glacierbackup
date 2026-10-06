@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  Glacier Backup - creates the S3 bucket and a dedicated upload-only access key
+  used by the Glacier Backup macOS app.
+
+Resources:
+  BackupBucket:
+    Type: AWS::S3::Bucket
+    # Deleting the stack must never delete the backups.
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: abort-incomplete-multipart-uploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 7
+
+  BackupUser:
+    Type: AWS::IAM::User
+    Properties:
+      Policies:
+        - PolicyName: glacier-backup-upload
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:AbortMultipartUpload
+                Resource: !Sub "${BackupBucket.Arn}/*"
+              - Effect: Allow
+                Action: s3:ListBucket
+                Resource: !GetAtt BackupBucket.Arn
+
+  BackupAccessKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName: !Ref BackupUser
+
+Outputs:
+  AppConfiguration:
+    Description: Copy this whole value and paste it into the Glacier Backup app.
+    Value: !Sub "glacierbackup:${AWS::Region}:${BackupBucket}:${BackupAccessKey}:${BackupAccessKey.SecretAccessKey}"

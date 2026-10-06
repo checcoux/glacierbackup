@@ -26,7 +26,13 @@ Requires macOS 14+ and Xcode. The project can also be opened in Xcode from `Pack
 
 ## AWS setup
 
-The bucket must already exist. Minimal IAM policy for the key:
+On first launch the app shows a guided setup: it opens the AWS console on a CloudFormation
+quick-create page that creates a private bucket and an upload-only access key, then asks you to
+paste the stack's `AppConfiguration` output. The template is `Support/cloudformation.yaml`; it
+must be hosted on a public S3 URL, set in `SetupLink.templateURL`.
+
+To configure the app by hand instead, use Settings. The bucket must already exist. Minimal IAM
+policy for the key:
 
 ```json
 {

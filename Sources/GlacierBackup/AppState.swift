@@ -11,6 +11,7 @@ final class AppState: ObservableObject {
     @Published private(set) var credentials: AWSCredentials?
     @Published private(set) var statuses: [UUID: FolderStatus] = [:]
     @Published private(set) var isRunning = false
+    @Published var isShowingSetup = false
 
     private var runTask: Task<Void, Never>?
 
@@ -27,6 +28,19 @@ final class AppState: ObservableObject {
     func saveCredentials(_ credentials: AWSCredentials) throws {
         try Keychain.save(credentials)
         self.credentials = credentials
+    }
+
+    /// Verifica i dati della configurazione guidata e, se funzionano, li salva.
+    func applySetup(_ configuration: SetupConfiguration) async throws {
+        let client = S3Client(
+            credentials: configuration.credentials,
+            region: configuration.region,
+            bucket: configuration.bucket
+        )
+        try await client.headBucket()
+        try saveCredentials(configuration.credentials)
+        settings.region = configuration.region
+        settings.bucket = configuration.bucket
     }
 
     func addFolders(_ urls: [URL]) {

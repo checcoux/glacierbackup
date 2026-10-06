@@ -162,3 +162,38 @@ final class ArchiveTests: XCTestCase {
         XCTAssertGreaterThan(Int64(BackupEngine.partSize(forEstimatedSize: terabyte)) * 9_000, terabyte)
     }
 }
+
+final class SetupTests: XCTestCase {
+    func testParsesPastedConfiguration() {
+        let configuration = SetupConfiguration(
+            pasted: " glacierbackup:eu-south-1:glacierbackup-backupbucket-1abc:AKIAEXAMPLE:abc/DEF+123\n"
+        )
+        XCTAssertEqual(configuration?.region, "eu-south-1")
+        XCTAssertEqual(configuration?.bucket, "glacierbackup-backupbucket-1abc")
+        XCTAssertEqual(
+            configuration?.credentials,
+            AWSCredentials(accessKeyID: "AKIAEXAMPLE", secretAccessKey: "abc/DEF+123")
+        )
+    }
+
+    func testRejectsInvalidPastedConfiguration() {
+        XCTAssertNil(SetupConfiguration(pasted: ""))
+        XCTAssertNil(SetupConfiguration(pasted: "AKIAEXAMPLE"))
+        XCTAssertNil(SetupConfiguration(pasted: "glacierbackup:eu-west-1:bucket:AKIAEXAMPLE:"))
+        XCTAssertNil(SetupConfiguration(pasted: "glacierbackup:eu-west-1:Not A Bucket:AKIAEXAMPLE:secret"))
+        XCTAssertNil(SetupConfiguration(pasted: "other:eu-west-1:bucket:AKIAEXAMPLE:secret"))
+    }
+
+    func testQuickCreateLink() {
+        let url = SetupLink.quickCreate(
+            region: "eu-south-1",
+            templateURL: "https://example.s3.eu-west-1.amazonaws.com/cloudformation.yaml"
+        )
+        XCTAssertEqual(
+            url?.absoluteString,
+            "https://eu-south-1.console.aws.amazon.com/cloudformation/home?region=eu-south-1"
+                + "#/stacks/quickcreate?stackName=GlacierBackup"
+                + "&templateURL=https%3A%2F%2Fexample.s3.eu-west-1.amazonaws.com%2Fcloudformation.yaml"
+        )
+    }
+}

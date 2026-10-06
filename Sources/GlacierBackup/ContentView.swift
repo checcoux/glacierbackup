@@ -22,6 +22,13 @@ struct ContentView: View {
             Divider()
             footer
         }
+        .sheet(isPresented: $state.isShowingSetup) {
+            SetupWizardView()
+                .environmentObject(state)
+        }
+        .onAppear {
+            if !state.isConfigured { state.isShowingSetup = true }
+        }
         .toolbar {
             ToolbarItemGroup {
                 Button("Aggiungi cartella", systemImage: "plus", action: chooseFolders)
@@ -45,10 +52,13 @@ struct ContentView: View {
                 Label(destination, systemImage: "externaldrive.badge.icloud")
                     .foregroundStyle(.secondary)
             } else {
-                Label("Configura credenziali e bucket nelle Impostazioni.", systemImage: "exclamationmark.triangle")
+                Label("App non ancora collegata ad AWS.", systemImage: "exclamationmark.triangle")
                     .foregroundStyle(.orange)
             }
             Spacer()
+            if !state.isConfigured {
+                Button("Configurazione guidata…") { state.isShowingSetup = true }
+            }
         }
         .font(.callout)
         .lineLimit(1)
