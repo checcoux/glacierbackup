@@ -1,25 +1,32 @@
 # Glacier Backup
 
-App macOS (SwiftUI, nessuna dipendenza esterna) che archivia cartelle con `tar` e le carica su
-Amazon S3 nella classe **Glacier Deep Archive**.
+macOS app (SwiftUI, no external dependencies) that archives folders with `tar` and uploads them to
+Amazon S3 in the **Glacier Deep Archive** storage class.
 
-- Ogni backup crea un archivio completo: `prefisso/Cartella/Cartella_AAAA-MM-GG_HHMMSS.tar[.gz]`
-- L'archivio viene inviato in streaming con upload multipart: non serve spazio libero su disco
-- Le credenziali (Access Key ID + Secret) sono salvate nel Portachiavi
+- Each backup creates a full archive: `prefix/Folder/Folder_YYYY-MM-DD_HHMMSS.tar[.gz]`
+- The archive is streamed with a multipart upload: no free disk space is needed
+- Credentials (Access Key ID + Secret) are stored in the Keychain
 
-## Compilare
+## Download
+
+[GlacierBackup.zip (v1.0)](https://bitbucket.org/francescocucchiaro/glacierbackup/raw/v1.0/build/GlacierBackup.zip)
+— signed and notarized, for Apple Silicon and Intel Macs running macOS 14 or later.
+
+Unzip it and move `Glacier Backup.app` to the Applications folder.
+
+## Building
 
 ```bash
-./build.sh                       # crea build/Glacier Backup.app
+./build.sh                       # creates build/Glacier Backup.app
 open "build/Glacier Backup.app"
-swift test                       # test
+swift test                       # tests
 ```
 
-Richiede macOS 14+ e Xcode. Il progetto si apre anche in Xcode da `Package.swift`.
+Requires macOS 14+ and Xcode. The project can also be opened in Xcode from `Package.swift`.
 
-## Configurazione AWS
+## AWS setup
 
-Il bucket deve già esistere. Policy IAM minima per la chiave:
+The bucket must already exist. Minimal IAM policy for the key:
 
 ```json
 {
@@ -28,30 +35,24 @@ Il bucket deve già esistere. Policy IAM minima per la chiave:
     {
       "Effect": "Allow",
       "Action": ["s3:PutObject", "s3:AbortMultipartUpload"],
-      "Resource": "arn:aws:s3:::NOME-BUCKET/*"
+      "Resource": "arn:aws:s3:::BUCKET-NAME/*"
     },
     {
       "Effect": "Allow",
       "Action": "s3:ListBucket",
-      "Resource": "arn:aws:s3:::NOME-BUCKET"
+      "Resource": "arn:aws:s3:::BUCKET-NAME"
     }
   ]
 }
 ```
 
-`s3:ListBucket` serve solo al pulsante "Verifica connessione".
+## Restoring
 
-Consigliata sul bucket una regola di ciclo di vita "Abort incomplete multipart uploads" (es. dopo
-7 giorni): se l'app viene chiusa a metà di un caricamento, le parti già inviate resterebbero
-altrimenti a pagamento.
-
-## Ripristino
-
-Non incluso nell'app. Dalla console AWS o con la CLI:
+Not included in the app. From the AWS console or with the CLI:
 
 ```bash
-aws s3api restore-object --bucket NOME-BUCKET --key CHIAVE \
+aws s3api restore-object --bucket BUCKET-NAME --key KEY \
   --restore-request '{"Days":7,"GlacierJobParameters":{"Tier":"Bulk"}}'
-# dopo 12-48 ore
-aws s3 cp s3://NOME-BUCKET/CHIAVE . && tar -xf Cartella_....tar
+# after 12-48 hours
+aws s3 cp s3://BUCKET-NAME/KEY . && tar -xf Folder_....tar
 ```
