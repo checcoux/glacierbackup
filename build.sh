@@ -1,6 +1,9 @@
 #!/bin/bash
 # Compila l'app (universale: Apple Silicon + Intel) e crea build/Glacier Backup.app e build/GlacierBackup.zip
 #
+# Fuori dal branch main produce "Glacier Backup Beta": un'app distinta, con impostazioni e
+# credenziali proprie, che può convivere con quella rilasciata.
+#
 # Per distribuirla ad altri:
 #   SIGN_IDENTITY="Developer ID Application: Nome (TEAMID)" NOTARY_PROFILE=nome-profilo ./build.sh
 # dove nome-profilo è stato creato una volta con `xcrun notarytool store-credentials`.
@@ -9,8 +12,16 @@ cd "$(dirname "$0")"
 
 ARCHS=(--arch arm64 --arch x86_64)
 IDENTITY="${SIGN_IDENTITY:--}"
-APP="build/Glacier Backup.app"
+NAME="Glacier Backup"
+BUNDLE_ID="com.suertestudio.glacierbackup"
 ZIP="build/GlacierBackup.zip"
+BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo main)"
+if [ "$BRANCH" != "main" ] && [ "$BRANCH" != "HEAD" ]; then
+    NAME="$NAME Beta"
+    BUNDLE_ID="$BUNDLE_ID.beta"
+    ZIP="build/GlacierBackupBeta.zip"
+fi
+APP="build/$NAME.app"
 
 swift build -c release "${ARCHS[@]}"
 
@@ -18,6 +29,10 @@ rm -rf "$APP" "$ZIP"
 mkdir -p "$APP/Contents/MacOS"
 cp "$(swift build -c release "${ARCHS[@]}" --show-bin-path)/GlacierBackup" "$APP/Contents/MacOS/GlacierBackup"
 cp Support/Info.plist "$APP/Contents/Info.plist"
+for key in CFBundleName CFBundleDisplayName; do
+    /usr/libexec/PlistBuddy -c "Set :$key $NAME" "$APP/Contents/Info.plist"
+done
+/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $BUNDLE_ID" "$APP/Contents/Info.plist"
 
 # Icona: Support/AppIcon.png (1024x1024) convertita in .icns
 ICONSET="build/AppIcon.iconset"

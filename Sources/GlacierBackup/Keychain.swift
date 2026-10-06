@@ -14,7 +14,7 @@ enum Keychain {
 
     private static let query: [String: Any] = [
         kSecClass as String: kSecClassGenericPassword,
-        kSecAttrService as String: "com.suertestudio.glacierbackup",
+        kSecAttrService as String: Bundle.main.bundleIdentifier ?? "com.suertestudio.glacierbackup",
         kSecAttrAccount as String: "aws-credentials",
     ]
 
