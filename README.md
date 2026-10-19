@@ -9,8 +9,7 @@ Amazon S3 in the **Glacier Deep Archive** storage class.
 
 ## Download
 
-[GlacierBackup.zip (v1.0)](https://bitbucket.org/francescocucchiaro/glacierbackup/raw/v1.0/build/GlacierBackup.zip)
-— signed and notarized, for Apple Silicon and Intel Macs running macOS 14 or later.
+You can download [the latest release](https://github.com/checcoux/glacierbackup/releases)  - signed and notarized, for Apple Silicon and Intel Macs running macOS 14 or later.
 
 Unzip it and move `Glacier Backup.app` to the Applications folder.
 
